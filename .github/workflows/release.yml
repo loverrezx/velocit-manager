@@ -42,6 +42,6 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: Velocit Manager ${{ github.ref_name }}
-          releaseBody: See the assets below to download and install this version.
+          releaseBodyFile: RELEASE_NOTES.md
           releaseDraft: false
           prerelease: false

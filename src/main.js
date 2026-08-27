@@ -159,6 +159,8 @@ const managerDelayInput = document.getElementById('manager-delay');
 const arrangeWindowsBtn = document.getElementById('arrange-windows-btn');
 const arrangeWidthInput = document.getElementById('arrange-width');
 const arrangeHeightInput = document.getElementById('arrange-height');
+const robloxCpuSelect = document.getElementById('roblox-cpu-select');
+const robloxRamSelect = document.getElementById('roblox-ram-select');
 const savePlaceIdButton = document.getElementById('save-place-id');
 const saveJobIdButton = document.getElementById('save-job-id');
 const autoRelaunchToggle = document.getElementById('auto-relaunch-toggle');
@@ -181,6 +183,11 @@ const solverSettingsPointsMessage = document.getElementById('solver-settings-poi
 const autoSolverToggle = document.getElementById('auto-solver-toggle');
 const autoSolverJobStatus = document.getElementById('auto-solver-job-status');
 const autoSolverLastJob = document.getElementById('auto-solver-last-job');
+const autoArrangeWindowsToggle = document.getElementById('auto-arrange-windows-toggle');
+const autoHideScreenToggle = document.getElementById('auto-hide-screen-toggle');
+const autoSortScreenToggle = document.getElementById('auto-sort-screen-toggle');
+const joinLowPlayerToggle = document.getElementById('join-low-player-toggle');
+const joinLowPingToggle = document.getElementById('join-low-ping-toggle');
 const solverLicenseOverlay = document.getElementById('solver-license-overlay');
 const solverLicenseForm = document.getElementById('solver-license-form');
 const solverLicenseKeyInput = document.getElementById('solver-license-key');
@@ -206,7 +213,26 @@ const updateEmpty = document.getElementById('update-empty');
 const updateMessage = document.getElementById('update-message');
 const updateRefresh = document.getElementById('update-refresh');
 const updateInstall = document.getElementById('update-install');
+const themeButton = document.getElementById('theme-btn');
+const THEME_KEY = 'account-manager:theme';
 const GITHUB_RELEASES_API = 'https://api.github.com/repos/loverrezx/velocit-manager/releases';
+
+function applyTheme(theme) {
+  const nextTheme = theme === 'dark' ? 'dark' : 'light';
+  document.documentElement.dataset.theme = nextTheme;
+  localStorage.setItem(THEME_KEY, nextTheme);
+  if (themeButton) {
+    const isDark = nextTheme === 'dark';
+    themeButton.setAttribute('aria-pressed', String(isDark));
+    themeButton.title = isDark ? 'เปลี่ยนเป็นธีมสว่าง' : 'เปลี่ยนเป็นธีมมืด';
+    themeButton.setAttribute('aria-label', themeButton.title);
+  }
+}
+
+applyTheme(localStorage.getItem(THEME_KEY));
+themeButton?.addEventListener('click', () => {
+  applyTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+});
 let currentAppVersion = '0.1.0';
 let selectedReleaseTag = '';
 let availableReleases = [];
@@ -216,7 +242,19 @@ let contextTarget = null;
 let contextScope = 'accounts';
 let managerSelected = new Set();
 let managerDragSelection = null;
-let managerSettings = { autoRelaunch: false, delaySeconds: 30, windowWidth: 640, windowHeight: 360 };
+let managerSettings = {
+  autoRelaunch: false,
+  autoArrangeWindows: false,
+  autoHideScreen: false,
+  autoSortScreen: false,
+  joinLowPlayer: false,
+  joinLowPing: false,
+  delaySeconds: 30,
+  windowWidth: 640,
+  windowHeight: 360,
+  cpuCores: 2,
+  ramGb: 1,
+};
 let licenseConnected = false;
 let solverConnected = false;
 let dragSelection = null;
@@ -254,6 +292,19 @@ async function hydrateLicenseState() {
   } catch {
     // Keep the existing localStorage values if the persistent store cannot be read.
   }
+}
+
+function formatLicenseDuration(remainingDays) {
+  if (remainingDays == null || remainingDays === '') return '';
+  const days = Number(remainingDays);
+  if (Number.isFinite(days) && days === 0) return 'Unlimited';
+  const formattedDays = Number.isFinite(days) ? days.toLocaleString('en-US') : String(remainingDays);
+  return `เหลือ ${formattedDays} วัน`;
+}
+
+function formatProgramConnectionLabel(remainingDays) {
+  const duration = formatLicenseDuration(remainingDays);
+  return duration ? `Connected · ${duration}` : 'Connected';
 }
 
 function setConnectionState(connected, label = connected ? 'Connected' : 'Unconnected') {
@@ -469,7 +520,16 @@ async function loadUpdateReleases() {
     });
     if (!response.ok) throw new Error(`GitHub ตอบกลับ ${response.status}`);
     const releases = await response.json();
-    availableReleases = Array.isArray(releases) ? releases.filter(release => !release.draft) : [];
+    availableReleases = Array.isArray(releases)
+      ? releases
+        .filter(release => !release.draft)
+        .sort((a, b) => {
+          const dateA = new Date(a.published_at || a.created_at || 0).getTime();
+          const dateB = new Date(b.published_at || b.created_at || 0).getTime();
+          return dateB - dateA;
+        })
+        .slice(0, 3)
+      : [];
     renderUpdateReleases();
   } catch (error) {
     updateReleaseList.replaceChildren();
@@ -544,8 +604,9 @@ licenseForm.addEventListener('submit', async event => {
   if (result.ok) {
     localStorage.setItem(LICENSE_KEY, key);
     await persistLicenseState();
-    setConnectionState(true);
-    licenseMessage.textContent = result.remaining_days != null ? `เชื่อมต่อสำเร็จ เหลือ ${result.remaining_days} วัน` : 'เชื่อมต่อสำเร็จ';
+        setConnectionState(true, formatProgramConnectionLabel(result.remaining_days));
+    licenseMessage.textContent = result.remaining_days != null ? `เชื่อมต่อสำเร็จ ${formatLicenseDuration(result.remaining_days)}` :
+'เชื่อมต่อสำเร็จ';
     licenseMessage.className = 'license-message success';
     setTimeout(closeLicensePopup, 900);
   } else {
@@ -574,7 +635,8 @@ solverLicenseForm.addEventListener('submit', async event => {
     localStorage.setItem(SOLVER_LICENSE_KEY, key);
     await persistLicenseState();
     setSolverConnectionState(true);
-    solverLicenseMessage.textContent = result.remaining_days != null ? `เชื่อมต่อสำเร็จ เหลือ ${result.remaining_days} วัน` : 'เชื่อมต่อสำเร็จ';
+        solverLicenseMessage.textContent = result.remaining_days != null ? `เชื่อมต่อสำเร็จ ${formatLicenseDuration(result.remaining_days)}` :
+'เชื่อมต่อสำเร็จ';
     solverLicenseMessage.className = 'license-message success';
     setTimeout(closeSolverLicensePopup, 900);
   } else {
@@ -655,9 +717,8 @@ function render() {
     row.dataset.rowIndex = String(rowIndex);
     row.className = `table-row${selected.has(account.username) ? ' selected' : ''}`;
     row.addEventListener('pointerdown', event => {
-      if (event.target.closest('.cell-check') || event.button !== 0) return;
+      if (event.button !== 0) return;
       dragSelection = { anchor: rowIndex, moved: false };
-      row.setPointerCapture?.(event.pointerId);
     });
     row.addEventListener('pointerenter', event => {
       if (!dragSelection || event.buttons !== 1) return;
@@ -850,9 +911,8 @@ function renderManager() {
     row.dataset.username = account.username;
     row.dataset.rowIndex = String(rowIndex);
     row.addEventListener('pointerdown', event => {
-      if (event.target.closest('.cell-check') || event.button !== 0) return;
+      if (event.button !== 0) return;
       managerDragSelection = { anchor: rowIndex, moved: false };
-      row.setPointerCapture?.(event.pointerId);
     });
     row.addEventListener('pointerenter', event => {
       if (!managerDragSelection || event.buttons !== 1) return;
@@ -1347,14 +1407,31 @@ async function launchManagerQueue() {
     // เปิด Multi Roblox ก่อนเสมอ สร้าง singleton mutex ค้างไว้ในโปรเซสแอป
     // ให้เปิด Roblox ได้หลายจอ เรียกซ้ำได้ (idempotent)
     await invoke('enable_multi_roblox').catch(() => {});
+    let selectedJobId = account.jobId && account.jobId !== '—' ? account.jobId : null;
+    const accessCode = account.accessCode && account.accessCode !== '—' ? account.accessCode : null;
+    if (!accessCode && (managerSettings.joinLowPlayer || managerSettings.joinLowPing)) {
+      const mode = managerSettings.joinLowPing ? 'ping' : 'players';
+      try {
+        const bestServer = await invoke('find_best_public_server', { placeId: account.placeId, mode });
+        if (bestServer) {
+          selectedJobId = bestServer;
+          account.description = mode === 'ping' ? 'พบเซิร์ฟเวอร์ ping ต่ำสุด กำลังเข้าเกม' : 'พบเซิร์ฟเวอร์ผู้เล่นน้อยสุด กำลังเข้าเกม';
+          saveManagerStore();
+          renderManager();
+        }
+      } catch (error) {
+        showToast(`ค้นหาเซิร์ฟเวอร์ไม่สำเร็จ: ${String(error).replace(/^Error:\s*/i, '')}`, 'error');
+      }
+    }
     const launchStartedAt = Date.now();
     const pid = await invoke('launch_roblox', {
       cookie: account.cookie || '',
       placeId: account.placeId,
-      jobId: account.jobId && account.jobId !== '—' ? account.jobId : null,
-      accessCode: account.accessCode && account.accessCode !== '—' ? account.accessCode : null,
+      jobId: selectedJobId,
+      accessCode,
     });
     account.robloxPid = Number(pid);
+    await configureRobloxResourcesForPid(account.robloxPid, false);
     account.lastCaptchaCheckAt = Date.now();
     account.status = 'farming';
     account.description = `เปิด Roblox แล้ว PID ${account.robloxPid}`;
@@ -1452,37 +1529,191 @@ async function stopAutoRelaunch() {
       account.status = 'waiting';
       account.description = 'หยุด Rejoin แล้ว';
     }
-
-// ปุ่มจัดเรียงหน้าต่าง Roblox
-if (arrangeWindowsBtn) {
-  arrangeWindowsBtn.addEventListener('click', async () => {
-    const width = parseInt(arrangeWidthInput?.value || '640', 10);
-    const height = parseInt(arrangeHeightInput?.value || '360', 10);
-
-    if (!width || !height || width < 1 || height < 1) {
-      showToast('กรุณาใส่ความกว้างและความสูงที่ถูกต้อง', 'error');
-      return;
-    }
-
-    // บันทึกค่าที่ใช้
-    managerSettings.windowWidth = width;
-    managerSettings.windowHeight = height;
-    localStorage.setItem(MANAGER_SETTINGS_KEY, JSON.stringify(managerSettings));
-
-    try {
-      const arranged = await invoke('arrange_roblox_windows', { width, height });
-      showToast(`จัดเรียงหน้าต่าง ${arranged} หน้าต่างเรียบร้อย`, 'success');
-    } catch (error) {
-      showToast(String(error).replace(/^Error:\s*/i, ''), 'error');
-    }
-  });
-}
-
   }
   saveManagerStore();
   renderManager();
   if (managerCardNote) { managerCardNote.className = 'saved'; managerCardNote.textContent = 'หยุด Rejoin และปิด Roblox ทุกจอแล้ว'; }
 }
+
+function saveManagerSettings() {
+  localStorage.setItem(MANAGER_SETTINGS_KEY, JSON.stringify(managerSettings));
+}
+
+function syncResourceDropdown(dropdownName, value, label) {
+  const dropdown = document.querySelector(`[data-dropdown="${dropdownName}"]`);
+  if (!dropdown) return;
+  const valueNode = dropdown.querySelector('.dropdown-value');
+  if (valueNode) valueNode.textContent = label;
+  dropdown.querySelectorAll('[data-value]').forEach(option => {
+    option.classList.toggle('selected', option.dataset.value === String(value));
+  });
+}
+
+function getConfiguredRobloxResources() {
+  const cpuCores = Math.min(5, Math.max(1, Number.parseInt(robloxCpuSelect?.value || managerSettings.cpuCores || 2, 10)));
+  const ramGb = Math.min(4, Math.max(1, Number.parseInt(robloxRamSelect?.value || managerSettings.ramGb || 1, 10)));
+  managerSettings.cpuCores = cpuCores;
+  managerSettings.ramGb = ramGb;
+  if (robloxCpuSelect) robloxCpuSelect.value = String(cpuCores);
+  if (robloxRamSelect) robloxRamSelect.value = String(ramGb);
+  syncResourceDropdown('roblox-cpu', cpuCores, `${cpuCores}C`);
+  syncResourceDropdown('roblox-ram', ramGb, `${ramGb}R`);
+  saveManagerSettings();
+  return { cpuCores, ramGb };
+}
+
+async function configureRobloxResourcesForPid(pid, notify = false) {
+  const { cpuCores, ramGb } = getConfiguredRobloxResources();
+  try {
+    const result = await invoke('configure_roblox_resources', { pid: Number(pid), cpuCores, ramGb });
+    if (notify) showToast(`ตั้งค่า Roblox: ${cpuCores}C / ${ramGb}R แล้ว`, 'success');
+    return result;
+  } catch (error) {
+    if (notify) showToast(String(error).replace(/^Error:\s*/i, ''), 'error');
+    return null;
+  }
+}
+
+async function applyRobloxResourcesToRunningProcesses(notify = false) {
+  const pids = [...new Set(await invoke('roblox_process_pids').catch(() => []))]
+    .map(Number)
+    .filter(Number.isFinite);
+  if (!pids.length) {
+    if (notify) showToast('ยังไม่พบหน้าต่าง Roblox ที่กำลังเปิดอยู่', 'warn');
+    return;
+  }
+  await Promise.all(pids.map(pid => configureRobloxResourcesForPid(pid, false)));
+  if (notify) {
+    const { cpuCores, ramGb } = getConfiguredRobloxResources();
+    showToast(`ใช้ทรัพยากรกับ Roblox ${pids.length} จอ: ${cpuCores}C / ${ramGb}R`, 'success');
+  }
+}
+
+let resourceSettingsTimer = null;
+function refreshRobloxResourceWatch() {
+  if (resourceSettingsTimer) return;
+  resourceSettingsTimer = setInterval(() => applyRobloxResourcesToRunningProcesses(false), 5000);
+  applyRobloxResourcesToRunningProcesses(false);
+}
+
+function getConfiguredWindowSize() {
+  const width = Number.parseInt(arrangeWidthInput?.value || managerSettings.windowWidth || 640, 10);
+  const height = Number.parseInt(arrangeHeightInput?.value || managerSettings.windowHeight || 360, 10);
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width < 1 || height < 1) return null;
+  managerSettings.windowWidth = width;
+  managerSettings.windowHeight = height;
+  if (arrangeWidthInput) arrangeWidthInput.value = String(width);
+  if (arrangeHeightInput) arrangeHeightInput.value = String(height);
+  saveManagerSettings();
+  return { width, height };
+}
+
+async function runWindowAutomation() {
+  if (!managerSettings.autoArrangeWindows && !managerSettings.autoSortScreen) return;
+  const size = getConfiguredWindowSize();
+  if (!size) return;
+  if (managerSettings.autoArrangeWindows) {
+    await invoke('resize_roblox_windows', size).catch(() => {});
+  }
+  if (managerSettings.autoSortScreen) {
+    await invoke('arrange_roblox_windows', size).catch(() => {});
+  }
+}
+
+let windowAutomationTimer = null;
+let windowAutomationSignature = '';
+const windowSeenAt = new Map();
+const autoHideWindowTimers = new Map();
+
+function clearAutoHideTimer(pid) {
+  const timer = autoHideWindowTimers.get(pid);
+  if (timer) clearTimeout(timer);
+  autoHideWindowTimers.delete(pid);
+}
+
+function scheduleAutoHide(pid, seenAt) {
+  if (!managerSettings.autoHideScreen || autoHideWindowTimers.has(pid)) return;
+  const delay = Math.max(0, 10000 - (Date.now() - seenAt));
+  const timer = setTimeout(async () => {
+    autoHideWindowTimers.delete(pid);
+    if (managerSettings.autoHideScreen) await invoke('minimize_roblox_windows').catch(() => {});
+  }, delay);
+  autoHideWindowTimers.set(pid, timer);
+}
+
+function stopWindowAutomationWatch() {
+  if (windowAutomationTimer) clearInterval(windowAutomationTimer);
+  windowAutomationTimer = null;
+  windowAutomationSignature = '';
+  for (const timer of autoHideWindowTimers.values()) clearTimeout(timer);
+  autoHideWindowTimers.clear();
+  windowSeenAt.clear();
+}
+
+async function runWindowAutomationTick() {
+  if (!managerSettings.autoArrangeWindows && !managerSettings.autoHideScreen && !managerSettings.autoSortScreen) return;
+  const pids = [...new Set(await invoke('roblox_process_pids').catch(() => []))].map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+  const current = new Set(pids);
+  for (const pid of windowSeenAt.keys()) {
+    if (!current.has(pid)) {
+      windowSeenAt.delete(pid);
+      clearAutoHideTimer(pid);
+    }
+  }
+  const signature = pids.join(',');
+  const changed = signature !== windowAutomationSignature;
+  windowAutomationSignature = signature;
+  const now = Date.now();
+  for (const pid of pids) {
+    if (!windowSeenAt.has(pid)) windowSeenAt.set(pid, now);
+    if (managerSettings.autoHideScreen) scheduleAutoHide(pid, windowSeenAt.get(pid));
+  }
+  if (changed && pids.length && (managerSettings.autoArrangeWindows || managerSettings.autoSortScreen)) {
+    await runWindowAutomation();
+  }
+}
+
+function refreshWindowAutomationWatch() {
+  const enabled = managerSettings.autoArrangeWindows || managerSettings.autoHideScreen || managerSettings.autoSortScreen;
+  if (!enabled) {
+    stopWindowAutomationWatch();
+    return;
+  }
+  if (!windowAutomationTimer) {
+    windowAutomationTimer = setInterval(runWindowAutomationTick, 1500);
+    runWindowAutomationTick();
+  }
+}
+
+async function applyWindowAutomationToggle(field, toggle) {
+  if (!toggle) return;
+  managerSettings[field] = toggle.checked;
+  saveManagerSettings();
+  if (field === 'autoHideScreen' && !toggle.checked) {
+    for (const timer of autoHideWindowTimers.values()) clearTimeout(timer);
+    autoHideWindowTimers.clear();
+  }
+  refreshWindowAutomationWatch();
+  if (toggle.checked && (field === 'autoArrangeWindows' || field === 'autoSortScreen')) {
+    await runWindowAutomation();
+  }
+}
+
+async function arrangeManagerWindows() {
+  const size = getConfiguredWindowSize();
+  if (!size) {
+    showToast('กรุณาใส่ความกว้างและความสูงที่ถูกต้อง', 'error');
+    return;
+  }
+  try {
+    const arranged = await invoke('arrange_roblox_windows', size);
+    showToast(`จัดเรียงหน้าต่าง ${arranged} หน้าต่างเรียบร้อย`, 'success');
+  } catch (error) {
+    showToast(String(error).replace(/^Error:\s*/i, ''), 'error');
+  }
+}
+
+arrangeWindowsBtn?.addEventListener('click', arrangeManagerWindows);
 
 autoRelaunchToggle?.addEventListener('change', async event => {
   if (!licenseRequired(event)) return;
@@ -1490,6 +1721,40 @@ autoRelaunchToggle?.addEventListener('change', async event => {
   localStorage.setItem(MANAGER_SETTINGS_KEY, JSON.stringify(managerSettings));
   if (autoRelaunchToggle.checked) await startAutoRelaunch();
   else await stopAutoRelaunch();
+});
+
+[
+  ['autoArrangeWindows', autoArrangeWindowsToggle],
+  ['autoHideScreen', autoHideScreenToggle],
+  ['autoSortScreen', autoSortScreenToggle],
+].forEach(([field, toggle]) => {
+  toggle?.addEventListener('change', async event => {
+    if (!licenseRequired(event)) {
+      toggle.checked = Boolean(managerSettings[field]);
+      return;
+    }
+    await applyWindowAutomationToggle(field, toggle);
+  });
+});
+
+[
+  ['joinLowPlayer', joinLowPlayerToggle],
+  ['joinLowPing', joinLowPingToggle],
+].forEach(([field, toggle]) => {
+  toggle?.addEventListener('change', event => {
+    if (!licenseRequired(event)) {
+      toggle.checked = Boolean(managerSettings[field]);
+      return;
+    }
+    managerSettings[field] = toggle.checked;
+    if (toggle.checked) {
+      const otherField = field === 'joinLowPlayer' ? 'joinLowPing' : 'joinLowPlayer';
+      const otherToggle = field === 'joinLowPlayer' ? joinLowPingToggle : joinLowPlayerToggle;
+      managerSettings[otherField] = false;
+      if (otherToggle) otherToggle.checked = false;
+    }
+    saveManagerSettings();
+  });
 });
 
 autoSolverToggle?.addEventListener('change', async event => {
@@ -1556,8 +1821,11 @@ checkAll.addEventListener('change', event => {
 });
 
 function setupCustomDropdown(dropdown, onSelect) {
+  if (!dropdown) return;
   const trigger = dropdown.querySelector('.dropdown-trigger');
   const menu = dropdown.querySelector('.dropdown-menu');
+  const valueNode = dropdown.querySelector('.dropdown-value') || trigger?.querySelector('span');
+  if (!trigger || !menu) return;
   trigger.addEventListener('click', event => {
     if (!licenseRequired(event)) return;
     event.stopPropagation();
@@ -1574,7 +1842,7 @@ function setupCustomDropdown(dropdown, onSelect) {
     if (!option) return;
     menu.querySelectorAll('[data-value]').forEach(item => item.classList.remove('selected'));
     option.classList.add('selected');
-    dropdown.querySelector('span').textContent = option.textContent;
+    if (valueNode) valueNode.textContent = option.textContent;
     dropdown.classList.remove('open');
     trigger.setAttribute('aria-expanded', 'false');
     onSelect(option.dataset.value);
@@ -1590,6 +1858,17 @@ setupCustomDropdown(statusFilterDropdown, value => {
   statusFilterValue = value;
   page = 1;
   render();
+});
+
+setupCustomDropdown(document.querySelector('[data-dropdown="roblox-cpu"]'), async value => {
+  if (robloxCpuSelect) robloxCpuSelect.value = value;
+  getConfiguredRobloxResources();
+  await applyRobloxResourcesToRunningProcesses(true);
+});
+setupCustomDropdown(document.querySelector('[data-dropdown="roblox-ram"]'), async value => {
+  if (robloxRamSelect) robloxRamSelect.value = value;
+  getConfiguredRobloxResources();
+  await applyRobloxResourcesToRunningProcesses(true);
 });
 
 document.addEventListener('click', () => {
@@ -1772,7 +2051,7 @@ async function refreshSavedLicense(openOnFailure = false) {
   }
   const result = await verifyProgramLicense(key);
   if (result.ok) {
-    setConnectionState(true);
+    setConnectionState(true, formatProgramConnectionLabel(result.remaining_days));
     return true;
   }
   setConnectionState(false);
@@ -1786,6 +2065,14 @@ async function refreshSavedLicense(openOnFailure = false) {
 
 async function initializeLicenses() {
   await hydrateLicenseState();
+  if (autoArrangeWindowsToggle) autoArrangeWindowsToggle.checked = Boolean(managerSettings.autoArrangeWindows);
+  if (autoHideScreenToggle) autoHideScreenToggle.checked = Boolean(managerSettings.autoHideScreen);
+  if (autoSortScreenToggle) autoSortScreenToggle.checked = Boolean(managerSettings.autoSortScreen);
+  if (joinLowPlayerToggle) joinLowPlayerToggle.checked = Boolean(managerSettings.joinLowPlayer);
+  if (joinLowPingToggle) joinLowPingToggle.checked = Boolean(managerSettings.joinLowPing);
+  getConfiguredRobloxResources();
+  refreshWindowAutomationWatch();
+  refreshRobloxResourceWatch();
   if (autoSolverToggle) autoSolverToggle.checked = localStorage.getItem(AUTO_SOLVER_KEY) === 'true';
   if (localStorage.getItem(LICENSE_KEY)) await refreshSavedLicense();
   if (localStorage.getItem(SOLVER_LICENSE_KEY)) await refreshSolverLicense();

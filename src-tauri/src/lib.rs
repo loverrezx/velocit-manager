@@ -5,15 +5,28 @@ use std::path::PathBuf;
 use std::collections::HashMap;
 use std::io::{Read, Write};
 use std::sync::{Mutex, OnceLock};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use std::net::TcpListener;
 use tauri::Manager;
 use tauri_plugin_updater::UpdaterExt;
 
 #[cfg(target_os = "windows")]
-use windows_sys::Win32::System::Threading::CreateMutexW;
+use windows_sys::Win32::Foundation::{CloseHandle, HANDLE};
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::System::JobObjects::{
+    AssignProcessToJobObject, CreateJobObjectW, SetInformationJobObject,
+    JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_PROCESS_MEMORY,
+    JobObjectExtendedLimitInformation,
+};
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::System::Threading::{
+    CreateMutexW, OpenProcess, SetProcessAffinityMask,
+    PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION, PROCESS_SET_QUOTA,
+};
 #[cfg(target_os = "windows")]
 static ROBLOX_MUTEX: OnceLock<Vec<isize>> = OnceLock::new();
+#[cfg(target_os = "windows")]
+static ROBLOX_RESOURCE_JOBS: OnceLock<Mutex<HashMap<u32, isize>>> = OnceLock::new();
 static LUA_STATUS_STORE: OnceLock<Mutex<HashMap<String, LuaStatus>>> = OnceLock::new();
 static STATUS_BRIDGE_STARTED: OnceLock<u16> = OnceLock::new();
 static RELAUNCH_DASHBOARD_PID: OnceLock<Mutex<Option<u32>>> = OnceLock::new();
@@ -554,6 +567,186 @@ fn find_roblox_player() -> Result<std::path::PathBuf, String> {
     Err("ไม่พบ RobloxPlayerBeta.exe กรุณาเปิด Roblox ด้วยตัวเองสักครั้งก่อน".into())
 }
 
+#[cfg(target_os = "windows")]
+fn roblox_resource_jobs() -> &'static Mutex<HashMap<u32, isize>> {
+    ROBLOX_RESOURCE_JOBS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+#[tauri::command]
+fn configure_roblox_resources(pid: u32, cpu_cores: u32, ram_gb: u32) -> Result<String, String> {
+    if !(1..=5).contains(&cpu_cores) {
+        return Err("CPU ต้องเลือกตั้งแต่ 1C ถึง 5C".into());
+    }
+    if !(1..=4).contains(&ram_gb) {
+        return Err("RAM ต้องเลือกตั้งแต่ 1R ถึง 4R".into());
+    }
+
+    #[cfg(target_os = "windows")]
+    {
+        let available_cores = std::thread::available_parallelism()
+            .map(|value| value.get())
+            .unwrap_or(1);
+        let effective_cores = cpu_cores.min(available_cores as u32);
+        let affinity_mask = if effective_cores >= usize::BITS {
+            usize::MAX
+        } else {
+            (1usize << effective_cores) - 1
+        };
+        let access = PROCESS_QUERY_LIMITED_INFORMATION
+            | PROCESS_SET_INFORMATION
+            | PROCESS_SET_QUOTA;
+        let process = unsafe { OpenProcess(access, 0, pid) };
+        if process.is_null() {
+            return Err(format!("เปิด Roblox process {pid} เพื่อจัดสรรทรัพยากรไม่สำเร็จ"));
+        }
+
+        let affinity_ok = unsafe { SetProcessAffinityMask(process, affinity_mask) != 0 };
+        if !affinity_ok {
+            unsafe { CloseHandle(process); }
+            return Err(format!("กำหนด CPU affinity ให้ Roblox process {pid} ไม่สำเร็จ"));
+        }
+
+        let memory_limit = (ram_gb as usize)
+            .saturating_mul(1024)
+            .saturating_mul(1024)
+            .saturating_mul(1024);
+        let mut jobs = roblox_resource_jobs()
+            .lock()
+            .map_err(|_| "ไม่สามารถล็อกตัวจัดการทรัพยากร Roblox ได้".to_string())?;
+
+        if let Some(&job_value) = jobs.get(&pid) {
+            let job: HANDLE = job_value as HANDLE;
+            let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
+            info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_PROCESS_MEMORY;
+            info.ProcessMemoryLimit = memory_limit;
+            let updated = unsafe {
+                SetInformationJobObject(
+                    job,
+                    JobObjectExtendedLimitInformation,
+                    &info as *const _ as *const std::ffi::c_void,
+                    std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+                ) != 0
+            };
+            unsafe { CloseHandle(process); }
+            if !updated {
+                return Err(format!("กำหนด RAM ให้ Roblox process {pid} ไม่สำเร็จ"));
+            }
+            return Ok(format!("Roblox {pid}: {effective_cores}C / {ram_gb}R"));
+        }
+
+        let job = unsafe { CreateJobObjectW(std::ptr::null(), std::ptr::null()) };
+        if job.is_null() {
+            unsafe { CloseHandle(process); }
+            return Err(format!("สร้างตัวควบคุม RAM สำหรับ Roblox process {pid} ไม่สำเร็จ"));
+        }
+        let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
+        info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_PROCESS_MEMORY;
+        info.ProcessMemoryLimit = memory_limit;
+        let configured = unsafe {
+            SetInformationJobObject(
+                job,
+                JobObjectExtendedLimitInformation,
+                &info as *const _ as *const std::ffi::c_void,
+                std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+            ) != 0
+        };
+        if !configured {
+            unsafe { CloseHandle(job); CloseHandle(process); }
+            return Err(format!("กำหนด RAM ให้ Roblox process {pid} ไม่สำเร็จ"));
+        }
+        let assigned = unsafe { AssignProcessToJobObject(job, process) != 0 };
+        unsafe { CloseHandle(process); }
+        if !assigned {
+            unsafe { CloseHandle(job); }
+            return Err(format!("ผูกตัวควบคุม RAM กับ Roblox process {pid} ไม่สำเร็จ"));
+        }
+        if let Some(previous) = jobs.insert(pid, job as isize) {
+            unsafe { CloseHandle(previous as HANDLE); }
+        }
+        return Ok(format!("Roblox {pid}: {effective_cores}C / {ram_gb}R"));
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (pid, cpu_cores, ram_gb);
+        Err("การตั้งค่า CPU/RAM รองรับเฉพาะ Windows".into())
+    }
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct RobloxPublicServerPage {
+    data: Vec<RobloxPublicServer>,
+    #[serde(rename = "nextPageCursor")]
+    next_page_cursor: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+struct RobloxPublicServer {
+    id: String,
+    playing: u32,
+    #[serde(rename = "maxPlayers")]
+    max_players: u32,
+    ping: Option<f64>,
+}
+
+#[tauri::command]
+async fn find_best_public_server(place_id: String, mode: String) -> Result<Option<String>, String> {
+    let place_id = place_id.trim();
+    if place_id.is_empty() || !place_id.chars().all(|character| character.is_ascii_digit()) {
+        return Err("Place ID ต้องเป็นตัวเลขเท่านั้น".into());
+    }
+    let mode = mode.trim().to_ascii_lowercase();
+    let client = reqwest::Client::builder()
+        .user_agent("VelocitManager/1.0")
+        .timeout(Duration::from_secs(15))
+        .build()
+        .map_err(|error| format!("เริ่มเชื่อมต่อ Roblox ไม่สำเร็จ: {error}"))?;
+
+    let mut cursor: Option<String> = None;
+    let mut best: Option<RobloxPublicServer> = None;
+    for _ in 0..10 {
+        let url = format!("https://games.roblox.com/v1/games/{place_id}/servers/Public");
+        let mut request = client
+            .get(url)
+            .query(&[("sortOrder", "Asc"), ("limit", "100")]);
+        if let Some(ref value) = cursor {
+            request = request.query(&[("cursor", value)]);
+        }
+        let response = request
+            .send()
+            .await
+            .map_err(|error| format!("อ่านรายการเซิร์ฟเวอร์ Roblox ไม่สำเร็จ: {error}"))?;
+        if !response.status().is_success() {
+            return Err(format!("Roblox ตอบกลับสถานะ {}", response.status()));
+        }
+        let page: RobloxPublicServerPage = response
+            .json()
+            .await
+            .map_err(|error| format!("อ่านข้อมูลเซิร์ฟเวอร์ Roblox ไม่สำเร็จ: {error}"))?;
+        for server in page.data {
+            if server.playing >= server.max_players { continue; }
+            let is_better = match best.as_ref() {
+                None => true,
+                Some(current) if mode == "ping" => {
+                    let candidate_ping = server.ping.unwrap_or(f64::INFINITY);
+                    let current_ping = current.ping.unwrap_or(f64::INFINITY);
+                    candidate_ping < current_ping
+                        || (candidate_ping == current_ping && server.playing < current.playing)
+                }
+                Some(current) => {
+                    server.playing < current.playing
+                        || (server.playing == current.playing
+                            && server.ping.unwrap_or(f64::INFINITY) < current.ping.unwrap_or(f64::INFINITY))
+                }
+            };
+            if is_better { best = Some(server); }
+        }
+        cursor = page.next_page_cursor.filter(|value| !value.is_empty());
+        if cursor.is_none() { break; }
+    }
+    Ok(best.map(|server| server.id))
+}
+
 #[tauri::command]
 async fn launch_roblox(
     cookie: String,
@@ -770,6 +963,75 @@ fn close_all_roblox() -> Result<(), String> {
 }
 
 #[tauri::command]
+fn resize_roblox_windows(width: u32, height: u32) -> Result<usize, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::Foundation::{BOOL, HWND, LPARAM};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, GetWindowRect, IsWindowVisible, MoveWindow};
+
+        struct CollectState { handles: Vec<HWND> }
+        unsafe extern "system" fn enum_callback(hwnd: HWND, lparam: LPARAM) -> BOOL {
+            let state = &mut *(lparam as *mut CollectState);
+            if IsWindowVisible(hwnd) == 0 { return 1; }
+            let mut buffer = [0u16; 256];
+            let len = GetWindowTextW(hwnd, buffer.as_mut_ptr(), buffer.len() as i32);
+            if len > 0 {
+                let title = String::from_utf16_lossy(&buffer[..len as usize]);
+                if title.contains("Roblox") { state.handles.push(hwnd); }
+            }
+            1
+        }
+
+        if width == 0 || height == 0 { return Err("ขนาดหน้าต่างต้องมากกว่า 0".into()); }
+        let mut state = CollectState { handles: Vec::new() };
+        unsafe { EnumWindows(Some(enum_callback), &mut state as *mut _ as LPARAM); }
+        if state.handles.is_empty() { return Ok(0); }
+        for hwnd in &state.handles {
+            let mut rect = unsafe { std::mem::zeroed() };
+            unsafe { GetWindowRect(*hwnd, &mut rect); }
+            unsafe { MoveWindow(*hwnd, rect.left, rect.top, width as i32, height as i32, 1); }
+        }
+        return Ok(state.handles.len());
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = (width, height);
+        Err("รองรับเฉพาะ Windows เท่านั้น".into())
+    }
+}
+
+#[tauri::command]
+fn minimize_roblox_windows() -> Result<usize, String> {
+    #[cfg(target_os = "windows")]
+    {
+        use windows_sys::Win32::Foundation::{BOOL, HWND, LPARAM};
+        use windows_sys::Win32::UI::WindowsAndMessaging::{EnumWindows, GetWindowTextW, IsWindowVisible, ShowWindow, SW_MINIMIZE};
+
+        struct CollectState { handles: Vec<HWND> }
+        unsafe extern "system" fn enum_callback(hwnd: HWND, lparam: LPARAM) -> BOOL {
+            let state = &mut *(lparam as *mut CollectState);
+            if IsWindowVisible(hwnd) == 0 { return 1; }
+            let mut buffer = [0u16; 256];
+            let len = GetWindowTextW(hwnd, buffer.as_mut_ptr(), buffer.len() as i32);
+            if len > 0 {
+                let title = String::from_utf16_lossy(&buffer[..len as usize]);
+                if title.contains("Roblox") { state.handles.push(hwnd); }
+            }
+            1
+        }
+
+        let mut state = CollectState { handles: Vec::new() };
+        unsafe { EnumWindows(Some(enum_callback), &mut state as *mut _ as LPARAM); }
+        for hwnd in &state.handles {
+            unsafe { ShowWindow(*hwnd, SW_MINIMIZE); }
+        }
+        return Ok(state.handles.len());
+    }
+    #[cfg(not(target_os = "windows"))]
+    { Err("รองรับเฉพาะ Windows เท่านั้น".into()) }
+}
+
+#[tauri::command]
 fn arrange_roblox_windows(width: u32, height: u32) -> Result<usize, String> {
     #[cfg(target_os = "windows")]
     {
@@ -924,7 +1186,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
-        .invoke_handler(tauri::generate_handler![check_roblox_cookie, probe_roblox_auth, check_program_license, submit_solver_captcha_job, poll_solver_captcha_job, load_license_state, save_license_state, start_status_bridge, get_lua_status_snapshot, update_relaunch_dashboard, open_relaunch_dashboard, close_relaunch_dashboard, enable_multi_roblox, launch_roblox, roblox_process_pids, roblox_process_alive, roblox_process_state, newest_roblox_log, roblox_log_state, kill_roblox_pid, close_all_roblox, arrange_roblox_windows, install_github_release])
+        .invoke_handler(tauri::generate_handler![check_roblox_cookie, probe_roblox_auth, check_program_license, submit_solver_captcha_job, poll_solver_captcha_job, load_license_state, save_license_state, start_status_bridge, get_lua_status_snapshot, update_relaunch_dashboard, open_relaunch_dashboard, close_relaunch_dashboard, enable_multi_roblox, launch_roblox, roblox_process_pids, roblox_process_alive, roblox_process_state, newest_roblox_log, roblox_log_state, kill_roblox_pid, close_all_roblox, resize_roblox_windows, minimize_roblox_windows, arrange_roblox_windows, configure_roblox_resources, find_best_public_server, install_github_release])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

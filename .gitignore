@@ -1,6 +1,7 @@
 node_modules/
 dist/
 src-tauri/target/
+bootstrapper/target/
 *.log
 
 # Local Tauri signing material

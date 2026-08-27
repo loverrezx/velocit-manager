@@ -2353,7 +2353,8 @@ body {
 
 
 /* SolverCaptcha Settings */
-.page[data-page="settings"] {
+.page[data-page="settings"],
+.page[data-page="tools"] {
   padding: 28px;
   background: #f8fafc;
   overflow: auto;
@@ -2510,7 +2511,8 @@ body {
 }
 
 @media (max-width: 760px) {
-  .page[data-page="settings"] { padding: 18px; }
+  .page[data-page="settings"],
+  .page[data-page="tools"] { padding: 18px; }
   .settings-grid { grid-template-columns: 1fr; }
 }
 
@@ -2926,4 +2928,578 @@ body {
   .update-button span { display: none; }
   .update-button { width: 30px; justify-content: center; padding: 0; }
   .update-dialog { padding: 16px; }
+}
+
+
+.settings-empty-card {
+  min-height: 100%;
+  background: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .settings-empty-card {
+    min-height: 260px;
+  }
+}
+
+
+/* Light / dark theme switch */
+.theme-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(100, 116, 139, 0.22);
+  border-radius: 9px;
+  background: #f1f5f9;
+  color: #475569;
+  font: 700 11px/1 inherit;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.theme-button:hover {
+  border-color: rgba(14, 165, 233, 0.35);
+  background: #e0f2fe;
+  color: #0369a1;
+  transform: translateY(-1px);
+}
+
+.theme-icon {
+  width: 15px;
+  height: 15px;
+}
+
+.theme-icon-dark {
+  display: none;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --accent-blue: #38bdf8;
+  --accent-blue-strong: #7dd3fc;
+  --shell-sheen: radial-gradient(circle at bottom right, #1e293b 0%, #020617 58%);
+  --shell-sheen-soft: radial-gradient(circle at bottom right, #334155 0%, #0f172a 60%);
+  --shell-sheen-lift: radial-gradient(circle at bottom right, #475569 0%, #111827 68%);
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .app,
+html[data-theme="dark"] .modal-frame,
+html[data-theme="dark"] .page {
+  background: #020617;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .page[data-page="settings"],
+html[data-theme="dark"] .page[data-page="tools"] {
+  background: #020617;
+}
+
+html[data-theme="dark"] .theme-button {
+  border-color: #334155;
+  background: #1e293b;
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .theme-button:hover {
+  border-color: #0ea5e9;
+  background: #0c4a6e;
+  color: #e0f2fe;
+}
+
+html[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+
+html[data-theme="dark"] .theme-icon-dark {
+  display: block;
+}
+
+html[data-theme="dark"] .window-button svg {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .stat-card {
+  border-color: #334155;
+  background: linear-gradient(158deg, rgba(30, 41, 59, 0.98) 0%, rgba(15, 23, 42, 0.96) 48%, rgba(8, 47, 73, 0.92) 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 22px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(148, 163, 184, 0.12);
+}
+
+html[data-theme="dark"] .stat-card::after {
+  background: linear-gradient(180deg, rgba(148, 163, 184, 0.1), transparent);
+}
+
+html[data-theme="dark"] .stat-title,
+html[data-theme="dark"] .stat-value,
+html[data-theme="dark"] .panel-title,
+html[data-theme="dark"] .panel-sub,
+html[data-theme="dark"] .panel-range,
+html[data-theme="dark"] .panel-page,
+html[data-theme="dark"] .stat-label {
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .content-panel,
+html[data-theme="dark"] .manager-layout,
+html[data-theme="dark"] .manager-workspace,
+html[data-theme="dark"] .manager-table,
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .settings-empty-card {
+  border-color: #334155;
+  background: #0f172a;
+  color: #e5e7eb;
+  box-shadow: 0 12px 28px -18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+html[data-theme="dark"] .settings-card,
+html[data-theme="dark"] .settings-empty-card {
+  background: #111827;
+}
+
+html[data-theme="dark"] .table-head,
+html[data-theme="dark"] .manager-table-head,
+html[data-theme="dark"] .table-row,
+html[data-theme="dark"] .manager-table-row {
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .table-row:hover,
+html[data-theme="dark"] .manager-table-row:hover {
+  background: rgba(30, 41, 59, 0.82);
+}
+
+html[data-theme="dark"] .table-row.selected,
+html[data-theme="dark"] .manager-table-row.selected {
+  background: rgba(14, 116, 144, 0.28);
+}
+
+html[data-theme="dark"] .settings-head h2,
+html[data-theme="dark"] .settings-card h3,
+html[data-theme="dark"] .settings-toggle-row strong,
+html[data-theme="dark"] .settings-card-kicker,
+html[data-theme="dark"] .settings-kicker,
+html[data-theme="dark"] .settings-card-description,
+html[data-theme="dark"] .settings-card-status,
+html[data-theme="dark"] .settings-head p {
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .settings-card-description,
+html[data-theme="dark"] .settings-card-status,
+html[data-theme="dark"] .settings-toggle-row div > span,
+html[data-theme="dark"] .settings-point-message {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .settings-toggle-row,
+html[data-theme="dark"] .settings-card-divider {
+  border-color: #334155;
+}
+
+html[data-theme="dark"] .settings-card-icon {
+  border-color: #075985;
+  background: #082f49;
+  color: #7dd3fc;
+}
+
+html[data-theme="dark"] .settings-point-balance {
+  border-color: #075985;
+  background: #082f49;
+}
+
+html[data-theme="dark"] .settings-point-label,
+html[data-theme="dark"] .settings-point-message {
+  color: #93c5fd;
+}
+
+html[data-theme="dark"] .settings-point-balance strong {
+  color: #7dd3fc;
+}
+
+html[data-theme="dark"] .search-box,
+html[data-theme="dark"] .search-box input,
+html[data-theme="dark"] .pill-select,
+html[data-theme="dark"] .pill-nav,
+html[data-theme="dark"] .pill-native,
+html[data-theme="dark"] .dropdown-trigger,
+html[data-theme="dark"] .dropdown-menu,
+html[data-theme="dark"] .dropdown-menu button,
+html[data-theme="dark"] .manager-field-row input,
+html[data-theme="dark"] .manager-delay-row input,
+html[data-theme="dark"] .manager-arrange-row input {
+  border-color: #334155;
+  background: #111827;
+  color: #e5e7eb;
+}
+
+html[data-theme="dark"] .search-box input::placeholder,
+html[data-theme="dark"] .manager-field-row input::placeholder,
+html[data-theme="dark"] .manager-delay-row input::placeholder,
+html[data-theme="dark"] .manager-arrange-row input::placeholder {
+  color: #64748b;
+}
+
+html[data-theme="dark"] .dropdown-menu button:hover,
+html[data-theme="dark"] .dropdown-menu button.selected {
+  background: #0c4a6e;
+  color: #e0f2fe;
+}
+
+html[data-theme="dark"] .account-context-menu,
+html[data-theme="dark"] .sheet,
+html[data-theme="dark"] .license-dialog,
+html[data-theme="dark"] .update-dialog {
+  border-color: #334155;
+  background: #111827;
+  color: #e5e7eb;
+  box-shadow: 0 22px 48px -18px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+html[data-theme="dark"] .sheet-title,
+html[data-theme="dark"] .license-dialog h2,
+html[data-theme="dark"] .update-head h2,
+html[data-theme="dark"] .update-release-top strong,
+html[data-theme="dark"] .update-release-title,
+html[data-theme="dark"] .update-current-version strong {
+  color: #f1f5f9;
+}
+
+html[data-theme="dark"] .sheet-tab,
+html[data-theme="dark"] .sheet-pane textarea,
+html[data-theme="dark"] .license-dialog input,
+html[data-theme="dark"] .update-current-version,
+html[data-theme="dark"] .update-release-option {
+  border-color: #334155;
+  background: #0f172a;
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .sheet-tab.active,
+html[data-theme="dark"] .update-release-option:hover,
+html[data-theme="dark"] .update-release-option.selected {
+  border-color: #0ea5e9;
+  background: #082f49;
+}
+
+html[data-theme="dark"] .update-release-date,
+html[data-theme="dark"] .update-release-state,
+html[data-theme="dark"] .update-release-notes,
+html[data-theme="dark"] .update-empty,
+html[data-theme="dark"] .update-message,
+html[data-theme="dark"] .license-message {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .update-release-badge {
+  background: #0c4a6e;
+  color: #bae6fd;
+}
+
+html[data-theme="dark"] .update-overlay,
+html[data-theme="dark"] .license-overlay,
+html[data-theme="dark"] .sheet-overlay {
+  background: rgba(2, 6, 23, 0.72);
+}
+
+@media (max-width: 760px) {
+  .theme-button-label { display: none; }
+  .theme-button { width: 30px; padding: 0; }
+}
+
+
+html[data-theme="dark"] .content-panel,
+html[data-theme="dark"] .page[data-page="velocit"] .manager-sidebar,
+html[data-theme="dark"] .page[data-page="velocit"] .manager-workspace {
+  border-color: #334155;
+  background: #0f172a;
+  color: #e5e7eb;
+  box-shadow: 0 12px 28px -18px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(148, 163, 184, 0.08);
+}
+
+html[data-theme="dark"] .page[data-page="velocit"] .manager-table-head {
+  border-bottom-color: #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .page[data-page="velocit"] .manager-table-row {
+  border-bottom-color: #1e293b;
+  background: #0f172a;
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .page[data-page="velocit"] .manager-table-row:hover {
+  background: #1e293b;
+}
+
+html[data-theme="dark"] .manager-card-kicker,
+html[data-theme="dark"] .manager-toggle-row,
+html[data-theme="dark"] .manager-field-row label {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .manager-card-note {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .manager-field-row input,
+html[data-theme="dark"] .manager-delay-row input,
+html[data-theme="dark"] .manager-arrange-row input {
+  border-color: #334155;
+  background: #020617;
+  color: #f1f5f9;
+}
+
+html[data-theme="dark"] .manager-save-btn {
+  border-color: #475569;
+  background: #1e293b;
+  color: #bae6fd;
+}
+
+html[data-theme="dark"] .manager-toggle-switch {
+  background: #334155;
+}
+
+html[data-theme="dark"] .manager-toggle-switch span {
+  background: #cbd5e1;
+}
+
+html[data-theme="dark"] .manager-toggle-row input:checked + .manager-toggle-switch {
+  background: #0369a1;
+}
+
+html[data-theme="dark"] .manager-toggle-row input:checked + .manager-toggle-switch span {
+  background: #e0f2fe;
+}
+
+html[data-theme="dark"] .license-lock {
+  background: rgba(2, 6, 23, 0.42);
+}
+
+html[data-theme="dark"] .license-lock span {
+  border-color: #334155;
+  background: rgba(15, 23, 42, 0.92);
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .copy-toast {
+  border-color: #166534;
+  background: #052e16;
+  color: #bbf7d0;
+}
+
+
+/* Roblox CPU / RAM resource controls in Manager */
+.manager-resource-settings {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 38px;
+  margin-top: 12px;
+  padding: 7px 8px 7px 10px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.manager-resource-title {
+  color: #334155;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  white-space: nowrap;
+}
+
+.manager-resource-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.manager-resource-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #64748b;
+  font-size: 9px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.manager-resource-select select {
+  min-width: 78px;
+  height: 32px;
+  padding: 0 26px 0 10px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  border-radius: 10px;
+  outline: none;
+  color: #1e293b;
+  background: #ffffff;
+  font: 700 10px/1 inherit;
+  cursor: pointer;
+}
+
+.manager-resource-select select:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.14);
+}
+
+html[data-theme="dark"] .manager-resource-settings {
+  border-color: #334155;
+  background: #0f172a;
+}
+
+html[data-theme="dark"] .manager-resource-title,
+html[data-theme="dark"] .manager-resource-select {
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .manager-resource-select select {
+  border-color: #475569;
+  color: #e2e8f0;
+  background: #1e293b;
+}
+
+@media (max-width: 760px) {
+  .manager-resource-settings {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .manager-resource-controls {
+    width: 100%;
+  }
+  .manager-resource-select {
+    flex: 1;
+  }
+  .manager-resource-select select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+
+/* Accounts table header dark-theme override: keep the header dark instead of the light default. */
+html[data-theme="dark"] .table-head {
+  background: #1e293b;
+  border-bottom-color: #334155;
+  color: #cbd5e1;
+}
+
+html[data-theme="dark"] .table-head .cell-check .box,
+html[data-theme="dark"] .table-row .cell-check .box {
+  border-color: #475569;
+  background: #0f172a;
+  box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.12);
+}
+
+html[data-theme="dark"] .table-row {
+  background: #0f172a;
+}
+
+html[data-theme="dark"] .table-row:hover {
+  background: #1e293b;
+}
+
+
+/* Compact Velocit resource controls: keep the settings row inside the sidebar. */
+.manager-resource-settings {
+  box-sizing: border-box;
+  min-width: 0;
+  gap: 5px;
+  padding: 6px 7px 6px 8px;
+  overflow: visible;
+}
+
+.manager-resource-title {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+}
+
+.manager-resource-controls {
+  flex: 0 0 auto;
+  min-width: 0;
+  gap: 4px;
+}
+
+.manager-resource-select {
+  gap: 4px;
+  font-size: 8px;
+}
+
+.manager-resource-select .dropdown-trigger {
+  width: 47px;
+  min-width: 47px;
+  height: 27px;
+  gap: 3px;
+  padding: 0 5px 0 7px;
+  font-size: 10px;
+}
+
+.manager-resource-select .dropdown-trigger svg {
+  width: 11px;
+  height: 11px;
+}
+
+.manager-resource-select .dropdown-menu {
+  z-index: 20;
+  min-width: 47px;
+}
+
+.manager-resource-select .dropdown-menu button {
+  height: 27px;
+  padding: 0 8px;
+  font-size: 10px;
+}
+
+@media (max-width: 360px) {
+  .manager-resource-settings {
+    gap: 3px;
+    padding-left: 6px;
+    padding-right: 5px;
+  }
+
+  .manager-resource-title {
+    font-size: 8px;
+  }
+
+  .manager-resource-controls {
+    gap: 3px;
+  }
+
+  .manager-resource-select {
+    gap: 3px;
+  }
+
+  .manager-resource-select .dropdown-trigger {
+    width: 44px;
+    min-width: 44px;
+    padding-left: 6px;
+    padding-right: 4px;
+  }
+
+  .manager-resource-select .dropdown-menu {
+    min-width: 44px;
+  }
+}
+
+html[data-theme="dark"] .manager-resource-select .dropdown-trigger {
+  border-color: #475569;
+  background: #1e293b;
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .manager-resource-select .dropdown-trigger:hover,
+html[data-theme="dark"] .manager-resource-select.custom-dropdown.open .dropdown-trigger {
+  border-color: #38bdf8;
+  background: #0c4a6e;
+  color: #e0f2fe;
 }

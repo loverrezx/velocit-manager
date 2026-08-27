@@ -16,6 +16,15 @@
             </svg>
             <span>Update</span>
           </button>
+          <button class="theme-button" id="theme-btn" type="button" title="เปลี่ยนธีม" aria-label="เปลี่ยนธีม">
+            <svg class="theme-icon theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+            </svg>
+            <svg class="theme-icon theme-icon-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20.7 15.3A8.5 8.5 0 0 1 8.7 3.3 8.5 8.5 0 1 0 20.7 15.3Z"/>
+            </svg>
+            <span class="theme-button-label">ธีม</span>
+          </button>
           <button class="window-button minimize" id="minimize-btn">
             <svg viewBox="0 0 16 16" fill="none">
               <path d="M4 8h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -229,6 +238,40 @@
                   <label for="manager-delay">Delay (s)</label>
                   <input id="manager-delay" type="number" min="1" max="86400" step="1" inputmode="numeric" placeholder="30" />
                 </div>
+                <div class="manager-resource-settings" aria-label="ROBLOX CPU SETTINGS">
+                  <span class="manager-resource-title">ROBLOX CPU SETTINGS</span>
+                  <div class="manager-resource-controls">
+                    <div class="manager-resource-select custom-dropdown" data-dropdown="roblox-cpu">
+                      <span class="manager-resource-label">CPU</span>
+                      <input id="roblox-cpu-select" type="hidden" value="2" />
+                      <button class="dropdown-trigger" type="button" aria-expanded="false" aria-label="Select Roblox CPU cores">
+                        <span class="dropdown-value">2C</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                      <div class="dropdown-menu" role="listbox">
+                        <button type="button" data-value="1">1C</button>
+                        <button type="button" data-value="2" class="selected">2C</button>
+                        <button type="button" data-value="3">3C</button>
+                        <button type="button" data-value="4">4C</button>
+                        <button type="button" data-value="5">5C</button>
+                      </div>
+                    </div>
+                    <div class="manager-resource-select custom-dropdown" data-dropdown="roblox-ram">
+                      <span class="manager-resource-label">RAM</span>
+                      <input id="roblox-ram-select" type="hidden" value="1" />
+                      <button class="dropdown-trigger" type="button" aria-expanded="false" aria-label="Select Roblox RAM">
+                        <span class="dropdown-value">1R</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                      </button>
+                      <div class="dropdown-menu" role="listbox">
+                        <button type="button" data-value="1" class="selected">1R</button>
+                        <button type="button" data-value="2">2R</button>
+                        <button type="button" data-value="3">3R</button>
+                        <button type="button" data-value="4">4R</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div class="manager-arrange-row">
                   <input id="arrange-width" type="number" min="1" step="1" inputmode="numeric" placeholder="160" />
                   <input id="arrange-height" type="number" min="1" step="1" inputmode="numeric" placeholder="210" />
@@ -260,13 +303,13 @@
             </section>
           </div>
         </div>
-        <div class="page" data-page="settings">
-          <div class="settings-panel">
+        <div class="page" data-page="tools">
+          <div class="settings-panel tools-panel">
             <div class="settings-head">
               <div>
-                <span class="settings-kicker">SETTINGS</span>
-                <h2>การตั้งค่าโปรแกรม</h2>
-                <p>จัดการการเชื่อมต่อบริการและคีย์ที่ใช้กับ Velocit Manager</p>
+                <span class="settings-kicker">TOOLS</span>
+                <h2>เครื่องมือ</h2>
+                <p>จัดการเครื่องมือ SolverCaptcha และระบบแก้ CAPTCHA อัตโนมัติ</p>
               </div>
             </div>
             <div class="settings-grid">
@@ -313,6 +356,98 @@
                     </div>
                     <span class="settings-point-message" id="solver-settings-points-message">ยังไม่ได้ตรวจสอบคีย์</span>
                   </div>
+                </div>
+              </section>
+              <section class="settings-card settings-empty-card" aria-label="พื้นที่ว่างสำหรับเครื่องมือเพิ่มเติม"></section>
+            </div>
+          </div>
+        </div>
+        <div class="page" data-page="settings">
+          <div class="settings-panel">
+            <div class="settings-head">
+              <div>
+                <span class="settings-kicker">SETTINGS</span>
+                <h2>การตั้งค่าโปรแกรม</h2>
+                <p>จัดการการตั้งค่าเพิ่มเติมของ Velocit Manager</p>
+              </div>
+            </div>
+            <div class="settings-grid settings-empty-grid">
+              <section class="settings-card settings-automation-card" aria-label="การตั้งค่าหน้าต่าง Roblox">
+                <div class="settings-card-head">
+                  <div class="settings-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="4" width="18" height="14" rx="2"/><path d="M8 21h8M12 18v3"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <span class="settings-card-kicker">WINDOW AUTOMATION</span>
+                    <h3>การตั้งค่าหน้าต่าง Roblox</h3>
+                  </div>
+                </div>
+                <p class="settings-card-description">ตั้งค่าการปรับขนาด ซ่อน และจัดเรียงหน้าต่าง โดยใช้ค่าความกว้างและความสูงจากแท็บ Manager</p>
+                <div class="settings-toggle-row">
+                  <div>
+                    <strong>Auto Arrange Windows</strong>
+                    <span>ปรับขนาดหน้าต่างตามค่าที่ตั้งไว้ในแท็บ Manager อัตโนมัติ</span>
+                  </div>
+                  <label class="switch" aria-label="เปิด Auto Arrange Windows">
+                    <input id="auto-arrange-windows-toggle" type="checkbox" />
+                    <span class="switch-track"></span>
+                  </label>
+                </div>
+                <div class="settings-toggle-row">
+                  <div>
+                    <strong>Auto Hide Screen</strong>
+                    <span>พับหน้าต่าง Roblox ทุกจอหลังเปิดมาแล้ว 10 วินาที</span>
+                  </div>
+                  <label class="switch" aria-label="เปิด Auto Hide Screen">
+                    <input id="auto-hide-screen-toggle" type="checkbox" />
+                    <span class="switch-track"></span>
+                  </label>
+                </div>
+                <div class="settings-toggle-row">
+                  <div>
+                    <strong>Auto Sort Screen</strong>
+                    <span>จัดเรียงหน้าต่าง Roblox อัตโนมัติตามขนาดหน้าจอและค่าจากแท็บ Manager</span>
+                  </div>
+                  <label class="switch" aria-label="เปิด Auto Sort Screen">
+                    <input id="auto-sort-screen-toggle" type="checkbox" />
+                    <span class="switch-track"></span>
+                  </label>
+                </div>
+              </section>
+              <section class="settings-card server-join-settings-card" aria-label="การตั้งค่าเลือกเซิร์ฟเวอร์ Roblox">
+                <div class="settings-card-head">
+                  <div class="settings-card-icon auto-solver-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="10" cy="18" r="2"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <span class="settings-card-kicker">SERVER SELECTION</span>
+                    <h3>การเลือกเซิร์ฟเวอร์</h3>
+                  </div>
+                </div>
+                <p class="settings-card-description">เลือกเซิร์ฟเวอร์ Roblox ที่เหมาะสมก่อนเปิดเกม โดยใช้ข้อมูลจำนวนผู้เล่นและค่า ping จาก Public Server</p>
+                <div class="settings-toggle-row">
+                  <div>
+                    <strong>Join Low Player</strong>
+                    <span>เข้าร่วมเซิร์ฟเวอร์ที่มีผู้เล่นน้อยที่สุดเท่าที่ค้นพบ</span>
+                  </div>
+                  <label class="switch" aria-label="เปิด Join Low Player">
+                    <input id="join-low-player-toggle" type="checkbox" />
+                    <span class="switch-track"></span>
+                  </label>
+                </div>
+                <div class="settings-toggle-row">
+                  <div>
+                    <strong>Join Low Pings</strong>
+                    <span>เข้าร่วมเซิร์ฟเวอร์ที่มีค่า ping ต่ำที่สุดเท่าที่ค้นพบ</span>
+                  </div>
+                  <label class="switch" aria-label="เปิด Join Low Pings">
+                    <input id="join-low-ping-toggle" type="checkbox" />
+                    <span class="switch-track"></span>
+                  </label>
                 </div>
               </section>
             </div>
