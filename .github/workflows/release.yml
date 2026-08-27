@@ -3,6 +3,8 @@ name: Publish Velocit Manager
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -11,6 +13,7 @@ permissions:
 
 jobs:
   publish-tauri:
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -45,3 +48,16 @@ jobs:
           releaseBodyFile: RELEASE_NOTES.md
           releaseDraft: false
           prerelease: false
+
+  update-release-notes:
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Publish v0.1.2 release notes')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Update v0.1.2 release description
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release edit v0.1.2 --repo "$GITHUB_REPOSITORY" --notes-file RELEASE_NOTES.md
