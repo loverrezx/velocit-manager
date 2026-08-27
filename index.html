@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Velocit Manager</title>
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <div class="modal-frame">
+        <div class="window-controls">
+          <button class="update-button" id="update-btn" type="button" title="ตรวจสอบเวอร์ชั่นและอัปเดตโปรแกรม">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 11a8.1 8.1 0 0 0-14.9-4L3 10m0 0V5m0 5h5M4 13a8.1 8.1 0 0 0 14.9 4L21 14m0 0v5m0-5h-5"/>
+            </svg>
+            <span>Update</span>
+          </button>
+          <button class="window-button minimize" id="minimize-btn">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path d="M4 8h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <button class="window-button maximize" id="maximize-btn" title="Center window">
+            <svg viewBox="0 0 16 16" fill="none">
+              <rect x="4" y="4" width="8" height="8" stroke="currentColor" stroke-width="1.5" rx="1"/>
+            </svg>
+          </button>
+          <button class="window-button close" id="close-btn">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <div class="page active" data-page="home">
+        <div class="stat-grid">
+          <div class="stat-card valid">
+            <div class="stat-head">
+              <span class="stat-title">Valid Accounts</span>
+              <span class="stat-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+              </span>
+            </div>
+            <div class="stat-foot">
+              <span class="stat-label">ACTIVE</span>
+              <span class="stat-value">0</span>
+            </div>
+          </div>
+          <div class="stat-card invalid">
+            <div class="stat-head">
+              <span class="stat-title">Invalid Accounts</span>
+              <span class="stat-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 6l12 12M18 6L6 18"/>
+                </svg>
+              </span>
+            </div>
+            <div class="stat-foot">
+              <span class="stat-label">FAILED</span>
+              <span class="stat-value">0</span>
+            </div>
+          </div>
+          <div class="stat-card farming">
+            <div class="stat-head">
+              <span class="stat-title">Farming Accounts</span>
+              <span class="stat-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2v4M12 18v4M4.9 4.9l2.9 2.9M16.2 16.2l2.9 2.9M2 12h4M18 12h4M4.9 19.1l2.9-2.9M16.2 7.8l2.9-2.9"/>
+                </svg>
+              </span>
+            </div>
+            <div class="stat-foot">
+              <span class="stat-label">FARMING</span>
+              <span class="stat-value">0</span>
+            </div>
+          </div>
+          <div class="stat-card done">
+            <div class="stat-head">
+              <span class="stat-title">Done Farming Accounts</span>
+              <span class="stat-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </span>
+            </div>
+            <div class="stat-foot">
+              <span class="stat-label">DONE FA</span>
+              <span class="stat-value">0</span>
+            </div>
+          </div>
+          <div class="stat-card blocked">
+            <div class="stat-head">
+              <span class="stat-title">Ban / Face Scan / Locked / Captcha</span>
+              <span class="stat-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+            </div>
+            <div class="stat-foot">
+              <span class="stat-label">WARNING</span>
+              <span class="stat-value">0</span>
+            </div>
+          </div>
+        </div>
+          <div class="content-panel">
+            <div class="panel-head">
+              <div class="panel-head-left">
+                <span class="panel-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                </span>
+                <div class="panel-titles">
+                  <span class="panel-title">Accounts (<span id="account-count">0</span>)</span>
+                  <span class="panel-sub">Updated · <span id="updated-at">-</span></span>
+                </div>
+              </div>
+              <div class="panel-head-right">
+                <span class="panel-range" id="panel-range">0-0 of 0</span>
+                <button class="pill-nav" id="prev-page" disabled>← Prev</button>
+                <span class="panel-page" id="panel-page">1/1</span>
+                <button class="pill-nav" id="next-page" disabled>Next →</button>
+                <button class="pill-status unconnected" id="connection-status" type="button" aria-label="Open program license settings"><span class="status-dot"></span><span id="connection-status-label">Unconnected</span></button>
+                <button class="pill-status unconnected solver-status" id="solver-status" type="button" aria-label="SolverCaptcha status"><span class="status-dot"></span><span id="solver-status-label">SolverCaptcha Unconnected</span></button>
+                <button class="panel-collapse" id="stats-toggle" title="พับ / เปิดการ์ดสถานะ" aria-expanded="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="18 15 12 9 6 15"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="panel-tools">
+              <div class="panel-tools-left">
+                <button class="btn-solid" id="import-btn">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  Import
+                </button>
+              </div>
+              <div class="panel-tools-right">
+                <div class="custom-dropdown" data-dropdown="per-page">
+                  <button class="dropdown-trigger" type="button" aria-expanded="false"><span id="per-page-label">25</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                  <div class="dropdown-menu" role="listbox">
+                    <button type="button" data-value="10">10</button>
+                    <button type="button" data-value="25" class="selected">25</button>
+                    <button type="button" data-value="50">50</button>
+                    <button type="button" data-value="75">75</button>
+                    <button type="button" data-value="100">100</button>
+                  </div>
+                </div>
+                <div class="custom-dropdown status-filter-wrap" data-dropdown="status-filter">
+                  <button class="dropdown-trigger" type="button" aria-expanded="false"><span id="status-filter-label">Filter: All</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>
+                  <div class="dropdown-menu" role="listbox">
+                    <button type="button" data-value="all" class="selected">Filter: All</button>
+                    <button type="button" data-value="active">Filter: Active</button>
+                    <button type="button" data-value="farming">Filter: Farming</button>
+                    <button type="button" data-value="done">Filter: Done</button>
+                    <button type="button" data-value="waiting">Filter: Waiting</button>
+                    <button type="button" data-value="invalid">Filter: Invalid</button>
+                    <button type="button" data-value="blocked">Filter: Blocked</button>
+                  </div>
+                </div>
+                <label class="search-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <input type="text" id="search-input" placeholder="Search..." />
+                </label>
+              </div>
+            </div>
+            <div class="table-head">
+              <label class="cell-check">
+                <input type="checkbox" id="check-all" />
+                <span class="box"></span>
+              </label>
+              <span class="col-user">USERNAME</span>
+              <span class="col-status">STATUS</span>
+              <span class="col-desc">DESCRIPTION</span>
+            </div>
+            <div class="table-body" id="table-body">
+              <div class="table-empty" id="table-empty">ยังไม่มีไอดีในโปรแกรม กด Import เพื่อเพิ่ม</div>
+            </div>
+          </div>
+        </div>
+        <div class="page" data-page="velocit">
+          <div class="manager-layout" aria-label="Manager workspace">
+            <aside class="manager-sidebar" aria-label="Manager sidebar">
+              <div class="manager-control-card">
+                <div class="manager-card-head">
+                  <span class="manager-card-kicker">MANAGER CONTROL</span>
+                  <span class="manager-card-indicator"></span>
+                </div>
+                <label class="manager-toggle-row">
+                  <span class="manager-toggle-label">Auto Relaunch</span>
+                  <input type="checkbox" id="auto-relaunch-toggle" />
+                  <span class="manager-toggle-switch"><span></span></span>
+                </label>
+                <div class="manager-field-row">
+                  <label for="manager-place-id">Place ID</label>
+                  <input id="manager-place-id" type="text" placeholder="PlaceId" autocomplete="off" />
+                  <button class="manager-save-btn" id="save-place-id" type="button" title="บันทึก Place ID" aria-label="บันทึก Place ID">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M5 4h11l3 3v13H5z"/><path d="M8 4v6h8V4M8 20v-5h8v5"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="manager-field-row">
+                  <label for="manager-job-id">Job ID</label>
+                  <input id="manager-job-id" type="text" placeholder="JobId" autocomplete="off" />
+                  <button class="manager-save-btn" id="save-job-id" type="button" title="บันทึก Job ID" aria-label="บันทึก Job ID">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M5 4h11l3 3v13H5z"/><path d="M8 4v6h8V4M8 20v-5h8v5"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="manager-delay-row">
+                  <label for="manager-delay">Delay (s)</label>
+                  <input id="manager-delay" type="number" min="1" max="86400" step="1" inputmode="numeric" placeholder="30" />
+                </div>
+                <div class="manager-arrange-row">
+                  <input id="arrange-width" type="number" min="1" step="1" inputmode="numeric" placeholder="160" />
+                  <input id="arrange-height" type="number" min="1" step="1" inputmode="numeric" placeholder="210" />
+                  <button class="manager-arrange-btn" id="arrange-windows-btn" type="button" title="Arrange Roblox Windows">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                    </svg>
+                    <span>Arrange Roblox Windows</span>
+                  </button>
+                </div>
+              </div>
+            </aside>
+            <section class="manager-workspace" aria-label="Manager main workspace">
+              <div class="manager-table" aria-label="Managed accounts">
+                <div class="manager-table-head">
+                  <label class="cell-check" aria-label="Select all managed accounts">
+                    <input type="checkbox" id="manager-check-all" />
+                    <span class="box"></span>
+                  </label>
+                  <span>USERNAME</span>
+                  <span>PLACE ID</span>
+                  <span>JOB ID</span>
+                  <span>STATUS</span>
+                </div>
+                <div class="manager-table-body" id="manager-table-body">
+                  <div class="table-empty">ยังไม่มีบัญชีใน Manager</div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="page" data-page="settings">
+          <div class="settings-panel">
+            <div class="settings-head">
+              <div>
+                <span class="settings-kicker">SETTINGS</span>
+                <h2>การตั้งค่าโปรแกรม</h2>
+                <p>จัดการการเชื่อมต่อบริการและคีย์ที่ใช้กับ Velocit Manager</p>
+              </div>
+            </div>
+            <div class="settings-grid">
+              <section class="settings-card combined-settings-card">
+                <div class="settings-card-section solver-settings-section">
+                  <div class="settings-card-head">
+                    <div class="settings-card-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3v18M3 12h18"/><circle cx="12" cy="12" r="8"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="settings-card-kicker">SOLVER CAPTCHA</span>
+                      <h3>Solver Captcha In-game</h3>
+                    </div>
+                  </div>
+                  <p class="settings-card-description">ตรวจสอบคีย์ SolverCaptcha และดู POINT ที่เหลือจากบัญชีที่เชื่อมต่อ</p>
+                  <div class="settings-card-status"><span class="status-dot"></span><span id="solver-settings-status">ยังไม่ได้เชื่อมต่อ</span></div>
+                  <button class="btn-solid settings-action-btn" id="solver-settings-btn" type="button">เปิดการตั้งค่า Solver Captcha</button>
+                </div>
+                <div class="settings-card-divider" aria-hidden="true"></div>
+                <div class="settings-card-section auto-solver-settings-section">
+                  <div class="settings-card-head">
+                    <div class="settings-card-icon auto-solver-card-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.64 5.64l2.12 2.12M16.24 16.24l2.12 2.12M18.36 5.64l-2.12 2.12M7.76 16.24l-2.12 2.12"/><circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="settings-card-kicker">AUTOMATION</span>
+                      <h3>Auto Solver Captcha In-game</h3>
+                    </div>
+                    <label class="switch settings-main-toggle" aria-label="เปิด Auto Solver Captcha In-game">
+                      <input id="auto-solver-toggle" type="checkbox" />
+                      <span class="switch-track"></span>
+                    </label>
+                  </div>
+                  <p class="settings-card-description">ส่งบัญชีที่ตรวจพบ CAPTCHA ไปแก้โดยอัตโนมัติ และติดตามผลลัพธ์จากงานที่ส่ง</p>
+                  <div class="settings-card-status"><span class="status-dot"></span><span id="auto-solver-job-status" role="status">ปิดการทำงานอัตโนมัติ</span></div>
+                  <div class="settings-point-balance" aria-live="polite">
+                    <div>
+                      <span class="settings-point-label">เหลือ Point ใน Key</span>
+                      <strong id="solver-settings-points">—</strong>
+                    </div>
+                    <span class="settings-point-message" id="solver-settings-points-message">ยังไม่ได้ตรวจสอบคีย์</span>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </div>
+        <div class="sheet-overlay" id="import-sheet" hidden>
+          <div class="sheet">
+            <div class="sheet-head">
+              <span class="sheet-title">Import Accounts</span>
+              <button class="sheet-close" id="import-close">
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div class="sheet-tabs">
+              <button class="sheet-tab active" data-mode="paste">วางข้อมูล</button>
+              <button class="sheet-tab" data-mode="file">อัพโหลดไฟล์</button>
+            </div>
+            <div class="sheet-pane active" data-pane="paste">
+              <textarea id="import-paste" placeholder="user:pass:cookie  (บรรทัดละ 1 ไอดี)"></textarea>
+            </div>
+            <div class="sheet-pane" data-pane="file">
+              <label class="drop-zone" id="drop-zone">
+                <input type="file" id="import-file" accept=".txt" hidden />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <span class="drop-main">เลือกไฟล์ หรือลากมาวางที่นี่</span>
+                <span class="drop-sub">รองรับ .txt เท่านั้น</span>
+                <span class="drop-file" id="drop-file"></span>
+              </label>
+            </div>
+            <div class="sheet-foot">
+              <span class="sheet-note" id="import-note"></span>
+              <button class="btn-solid" id="import-run">Import</button>
+            </div>
+          </div>
+        </div>
+        <div class="license-overlay" id="license-overlay" hidden>
+          <form class="license-dialog" id="license-form">
+            <div class="license-head">
+              <div>
+                <span class="license-kicker">PROGRAM LICENSE</span>
+                <h2>เชื่อมต่อคีย์โปรแกรม</h2>
+              </div>
+              <button class="sheet-close" id="license-close" type="button" aria-label="ปิด">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <label class="license-label" for="license-key">Program Key</label>
+            <input class="license-input" id="license-key" type="password" autocomplete="off" placeholder="กรอกคีย์โปรแกรม" />
+            <p class="license-help">คีย์จากเว็บไซต์ velocit.xyz ไม่มีตัวแทนจำหน่ายใด ๆ</p>
+            <p class="license-message" id="license-message" role="status"></p>
+            <div class="license-foot">
+              <button class="btn-ghost" id="license-cancel" type="button">ยกเลิก</button>
+              <button class="btn-solid" id="license-submit" type="submit">ตรวจสอบคีย์</button>
+            </div>
+          </form>
+        </div>
+        <div class="license-overlay" id="solver-license-overlay" hidden>
+          <form class="license-dialog" id="solver-license-form">
+            <div class="license-head">
+              <div>
+                <span class="license-kicker">SOLVERCAPTCHA IN-GAME</span>
+                <h2>ตั้งค่า SolverCaptcha</h2>
+              </div>
+              <button class="sheet-close" id="solver-license-close" type="button" aria-label="ปิด">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <label class="license-label" for="solver-license-key">SolverCaptcha Program Key</label>
+            <input class="license-input" id="solver-license-key" type="password" autocomplete="off" placeholder="กรอกคีย์ SolverCaptcha (ถ้ามี)" />
+            <p class="license-help">คีย์จากเว็บไซต์ velocit.xyz ไม่มีตัวแทนจำหน่ายใด ๆ</p>
+            <div class="solver-points-panel" aria-live="polite">
+              <div class="solver-point-stat">
+                <span class="solver-points-kicker">KEY POINT</span>
+                <strong id="solver-points-value">—</strong>
+              </div>
+              <div class="solver-point-stat solver-topup-stat">
+                <span class="solver-points-kicker">TOTAL TOP-UP</span>
+                <strong id="solver-total-topup-value">—</strong>
+              </div>
+              <span id="solver-points-message">ยังไม่ได้ตรวจสอบคีย์</span>
+            </div>
+            <p class="license-message" id="solver-license-message" role="status"></p>
+            <div class="license-foot">
+              <button class="btn-ghost" id="solver-license-cancel" type="button">ยกเลิก</button>
+              <button class="btn-solid" id="solver-license-submit" type="submit">ตรวจสอบคีย์</button>
+            </div>
+          </form>
+        </div>
+        <div class="update-overlay" id="update-overlay" hidden>
+          <section class="update-dialog" role="dialog" aria-modal="true" aria-labelledby="update-title">
+            <div class="update-head">
+              <div>
+                <span class="license-kicker">GITHUB RELEASES</span>
+                <h2 id="update-title">อัปเดต Velocit Manager</h2>
+              </div>
+              <button class="sheet-close" id="update-close" type="button" aria-label="ปิด">
+                <svg viewBox="0 0 16 16" fill="none"><path d="M5 5l6 6M11 5l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+            <div class="update-current-version">เวอร์ชั่นปัจจุบัน <strong id="update-current-version">กำลังตรวจสอบ...</strong></div>
+            <div class="update-release-list" id="update-release-list" aria-live="polite">
+              <p class="update-empty" id="update-empty">กำลังโหลดรายการเวอร์ชั่นจาก GitHub...</p>
+            </div>
+            <p class="update-message" id="update-message" role="status"></p>
+            <div class="update-foot">
+              <button class="btn-ghost" id="update-refresh" type="button">ตรวจสอบอีกครั้ง</button>
+              <button class="btn-solid" id="update-install" type="button" disabled>อัปเดตเวอร์ชั่นที่เลือก</button>
+            </div>
+          </section>
+        </div>
+        <div class="copy-toast" id="copy-toast" role="status" aria-live="polite"></div>
+        <div class="license-lock" id="license-lock" hidden>
+          <span>กรุณายืนยันคีย์โปรแกรมก่อนใช้งาน</span>
+        </div>
+        <div class="account-context-menu" id="account-context-menu" hidden role="menu" aria-label="Account actions">
+          <button class="context-item danger" data-action="delete" role="menuitem">Delete Accounts</button>
+          <div class="context-divider"></div>
+          <button class="context-item" data-status="active" role="menuitem">Active</button>
+          <button class="context-item" data-status="farming" role="menuitem">Farming</button>
+          <button class="context-item" data-status="done" role="menuitem">Done</button>
+          <button class="context-item" data-status="waiting" role="menuitem">Waiting</button>
+          <div class="context-divider"></div>
+          <button class="context-item" data-copy="cookie" role="menuitem">Copy Cookie</button>
+          <button class="context-item" data-copy="username" role="menuitem">Copy Username</button>
+          <button class="context-item" data-copy="password" role="menuitem">Copy Password</button>
+          <button class="context-item" data-copy="combo" role="menuitem">Copy Combo</button>
+          <button class="context-item" data-action="download-combo" role="menuitem">Download Combo</button>
+          <div class="context-divider"></div>
+          <button class="context-item muted" data-action="manager" role="menuitem">Add to Manager</button>
+        </div>
+        <div class="dock-shell" id="dock-shell">
+          <button class="dock-toggle" id="dock-toggle" title="ซ่อน / แสดงแท็บ" aria-expanded="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div class="modal-dock">
+          <button class="dock-icon active" data-target="home" title="Accounts">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </button>
+          <button class="dock-icon" data-target="velocit" title="Manager">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </button>
+          <button class="dock-icon" data-target="tools" title="Tools">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+            </svg>
+          </button>
+          <button class="dock-icon" data-target="settings" title="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+          </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

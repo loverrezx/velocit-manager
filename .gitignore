@@ -1,0 +1,11 @@
+node_modules/
+dist/
+src-tauri/target/
+*.log
+
+# Local Tauri signing material
+*.key
+*.key.pub
+.env
+.env.*
+!.env.example
