@@ -1501,7 +1501,7 @@ async function startAutoRelaunch() {
       } finally {
         ticking = false;
       }
-    }, 1000);
+    }, 20000);
     // จุดชนวนคิวเปิดเกม ลูปจะเลี้ยงตัวเองผ่าน setTimeout ใน finally ของมันเอง
     launchManagerQueue();
   } catch (error) {

@@ -126,12 +126,17 @@ fn open_relaunch_dashboard() -> Result<bool, String> {
         if let Some(pid) = *guard {
             let filter = format!("PID eq {pid}");
             if let Ok(output) = Command::new("tasklist").args(["/FI", &filter, "/FO", "CSV", "/NH"]).output() {
-                if String::from_utf8_lossy(&output.stdout).contains("cmd.exe") { return Ok(true); }
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                // เช็คว่า process ยังมีชีวิตอยู่และเป็น cmd.exe จริงๆ
+                if stdout.contains("cmd.exe") && stdout.contains(&pid.to_string()) {
+                    return Ok(true);
+                }
             }
+            // ถ้า PID หายแล้ว ให้เคลียร์ออก
             *guard = None;
         }
         let path = path.to_string_lossy().replace('\\', "\\\\").replace('\'', "''");
-        let command = format!("title Rejoin Auto Relaunch && powershell -NoProfile -ExecutionPolicy Bypass -Command \"while ($true) {{ Clear-Host; try {{ $d = Get-Content -LiteralPath '{}' -Raw -Encoding UTF8 | ConvertFrom-Json; Write-Host $d.banner -ForegroundColor Cyan; Write-Host ('Total Accounts : ' + $d.totalAccounts + ' | Time TH : ' + $d.timeTh + ' | Screen : ' + $d.screen) -ForegroundColor White; foreach ($a in $d.accounts) {{ $c = switch ($a.status) {{ 'Working' {{ 'Green' }} 'Rejoin' {{ 'Yellow' }} 'Error' {{ 'Red' }} default {{ 'DarkGray' }} }}; Write-Host ('[ ' + $a.username + ' ] (' + $a.place + ') | ( ' + $a.status + ' : ' + $a.message + ' )') -ForegroundColor $c }}; Write-Host ('Delay : ' + $d.delay) -ForegroundColor Magenta }} catch {{ Write-Host 'กำลังรอรับสถานะจาก Lua...' -ForegroundColor DarkGray }}; Start-Sleep -Milliseconds 1000 }}\"", path);
+        let command = format!("title Rejoin Auto Relaunch && powershell -NoProfile -ExecutionPolicy Bypass -Command \"while ($true) {{ Clear-Host; try {{ $d = Get-Content -LiteralPath '{}' -Raw -Encoding UTF8 | ConvertFrom-Json; Write-Host $d.banner -ForegroundColor Cyan; Write-Host ('Total Accounts : ' + $d.totalAccounts + ' | Time TH : ' + $d.timeTh + ' | Screen : ' + $d.screen) -ForegroundColor White; foreach ($a in $d.accounts) {{ $c = switch ($a.status) {{ 'Working' {{ 'Green' }} 'Rejoin' {{ 'Yellow' }} 'Error' {{ 'Red' }} default {{ 'DarkGray' }} }}; Write-Host ('[ ' + $a.username + ' ] (' + $a.place + ') | ( ' + $a.status + ' : ' + $a.message + ' )') -ForegroundColor $c }}; Write-Host ('Delay : ' + $d.delay) -ForegroundColor Magenta }} catch {{ Write-Host 'กำลังรอรับสถานะจาก Lua...' -ForegroundColor DarkGray }}; Start-Sleep -Seconds 20 }}\"", path);
         let child = Command::new("cmd.exe").args(["/K", &command]).spawn().map_err(|_| "เปิดหน้าต่างสถานะ Auto Relaunch ไม่สำเร็จ".to_string())?;
         *guard = Some(child.id());
         return Ok(true);
