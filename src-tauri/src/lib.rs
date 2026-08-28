@@ -24,6 +24,15 @@ use windows_sys::Win32::System::Threading::{
     PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_SET_INFORMATION, PROCESS_SET_QUOTA,
 };
 #[cfg(target_os = "windows")]
+fn hidden_process_command(program: &str) -> Command {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
+    let mut command = Command::new(program);
+    command.creation_flags(CREATE_NO_WINDOW);
+    command
+}
+
+#[cfg(target_os = "windows")]
 static ROBLOX_MUTEX: OnceLock<Vec<isize>> = OnceLock::new();
 #[cfg(target_os = "windows")]
 static ROBLOX_RESOURCE_JOBS: OnceLock<Mutex<HashMap<u32, isize>>> = OnceLock::new();
@@ -125,7 +134,7 @@ fn open_relaunch_dashboard() -> Result<bool, String> {
         let mut guard = slot.lock().map_err(|_| "ไม่สามารถควบคุมหน้าต่างสถานะ Auto Relaunch ได้".to_string())?;
         if let Some(pid) = *guard {
             let filter = format!("PID eq {pid}");
-            if let Ok(output) = Command::new("tasklist").args(["/FI", &filter, "/FO", "CSV", "/NH"]).output() {
+            if let Ok(output) = hidden_process_command("tasklist").args(["/FI", &filter, "/FO", "CSV", "/NH"]).output() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 // เช็คว่า process ยังมีชีวิตอยู่และเป็น cmd.exe จริงๆ
                 if stdout.contains("cmd.exe") && stdout.contains(&pid.to_string()) {
@@ -151,7 +160,7 @@ fn close_relaunch_dashboard() -> Result<(), String> {
     {
         if let Some(slot) = RELAUNCH_DASHBOARD_PID.get() {
             if let Ok(mut guard) = slot.lock() {
-                if let Some(pid) = guard.take() { let _ = Command::new("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).output(); }
+                if let Some(pid) = guard.take() { let _ = hidden_process_command("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).output(); }
             }
         }
     }
@@ -805,7 +814,7 @@ async fn launch_roblox(
 fn roblox_process_pids() -> Vec<u32> {
     #[cfg(target_os = "windows")]
     {
-        if let Ok(output) = Command::new("tasklist")
+        if let Ok(output) = hidden_process_command("tasklist")
             .args(["/FI", "IMAGENAME eq RobloxPlayerBeta.exe", "/FO", "CSV", "/NH"])
             .output()
         {
@@ -831,7 +840,7 @@ fn roblox_process_alive(pid: u32) -> bool {
     #[cfg(target_os = "windows")]
     {
         let pid_filter = format!("PID eq {pid}");
-        if let Ok(output) = Command::new("tasklist")
+        if let Ok(output) = hidden_process_command("tasklist")
             .args(["/FI", &pid_filter, "/FO", "CSV", "/NH"])
             .output()
         {
@@ -931,7 +940,7 @@ fn roblox_log_state(path: String) -> RobloxLogState {
 fn roblox_process_state() -> RobloxProcessState {
     #[cfg(target_os = "windows")]
     {
-        let output = Command::new("tasklist").args(["/FI", "IMAGENAME eq RobloxPlayerBeta.exe", "/FO", "CSV", "/NH"]).output();
+        let output = hidden_process_command("tasklist").args(["/FI", "IMAGENAME eq RobloxPlayerBeta.exe", "/FO", "CSV", "/NH"]).output();
         if let Ok(output) = output {
             let text = String::from_utf8_lossy(&output.stdout);
             let count = text.lines().filter(|line| line.contains("RobloxPlayerBeta.exe")).count() as u32;
@@ -945,7 +954,7 @@ fn roblox_process_state() -> RobloxProcessState {
 fn kill_roblox_pid(pid: u32) -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        let _ = Command::new("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).output();
+        let _ = hidden_process_command("taskkill").args(["/PID", &pid.to_string(), "/T", "/F"]).output();
     }
     #[cfg(not(target_os = "windows"))]
     { let _ = pid; }
@@ -956,7 +965,7 @@ fn kill_roblox_pid(pid: u32) -> Result<(), String> {
 fn close_all_roblox() -> Result<(), String> {
     #[cfg(target_os = "windows")]
     {
-        let result = Command::new("taskkill")
+        let result = hidden_process_command("taskkill")
             .args(["/IM", "RobloxPlayerBeta.exe", "/F"])
             .output()
             .map_err(|error| format!("สั่งปิด Roblox ไม่สำเร็จ: {error}"))?;

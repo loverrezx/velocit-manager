@@ -1,6 +1,6 @@
 [package]
 name = "tauri-account-manager"
-version = "0.1.4"
+version = "0.1.5"
 description = "Velocit Manager"
 authors = ["you"]
 edition = "2021"
